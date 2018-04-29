@@ -31,7 +31,6 @@ namespace Microsoft.Extensions.Configuration.ImmutableBinder
         ///     If binding of the <paramref name="configuration"/> failed due to any reason.
         /// </exception>
         public static T ImmutableBind<T>(this IConfiguration configuration)
-            where T : class
         {
             if (configuration == null)
             {
