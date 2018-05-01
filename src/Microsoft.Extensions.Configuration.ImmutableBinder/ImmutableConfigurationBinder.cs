@@ -70,14 +70,32 @@ namespace Microsoft.Extensions.Configuration.ImmutableBinder
                 return BindCollection(type, config);
             }
 
+            // check for a default value
+
             var constructors = type.GetConstructors();
 
             // For the first version, just take the first constructor.
-            var constructor = constructors.Single();
+            var constructor = constructors.FirstOrDefault();
+            if (constructor == null)
+            {
+                throw new InvalidOperationException("No constructor found for " + type);
+            }
+
             var values = new List<object>();
             foreach (var parameter in constructor.GetParameters())
             {
-                var value = BindType(parameter.ParameterType, config.GetSection(parameter.Name));
+                object value;
+                try
+                {
+                    value = BindType(parameter.ParameterType, config.GetSection(parameter.Name));
+                }
+                catch (Exception e) when (parameter.HasDefaultValue &&
+                                          (e is InvalidOperationException || e is IndexOutOfRangeException))
+                {
+                    // Fall back to default value, if specified.
+                    value = parameter.DefaultValue;
+                }
+
                 values.Add(value);
             }
 
